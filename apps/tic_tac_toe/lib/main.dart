@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:tic_tac_toe/tictactoe_page.dart' show TicTacToePage;
 
 void main() {
-  runApp(const MainApp());
-}
-
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(body: Center(child: Text('Hello World!'))),
-    );
-  }
+  runApp(
+    MaterialApp(
+      theme: ThemeData(colorSchemeSeed: Colors.teal),
+      darkTheme: ThemeData(
+        colorSchemeSeed: Colors.teal,
+        brightness: Brightness.dark,
+      ),
+      home: const TicTacToePage(),
+    ),
+  );
 }
