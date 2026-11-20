@@ -19,10 +19,11 @@ class TicTacToePage extends StatefulWidget {
 
 class _TicTacToePageState extends State<TicTacToePage> {
   var mode = TicTacToeMode.local;
+  var me = Mark.x;
   var game = TicTacToe.initial();
   var xWinCount = 0, oWinCount = 0, drawCount = 0;
 
-  bool get botsTurn => mode == .computer && game.turn == .o;
+  bool get botsTurn => mode == .computer && game.turn == me.other;
 
   void _tap(int i) {
     if (game.isOver || game.cells[i] != null || botsTurn) return;
@@ -49,21 +50,32 @@ class _TicTacToePageState extends State<TicTacToePage> {
     if (game.isDraw) drawCount++;
   });
 
-  void _newGame() => setState(() => game = TicTacToe.initial());
+  void _newGame() => setState(() => _newGameImpl());
+
+  void _newGameImpl() {
+    game = TicTacToe.initial();
+    if (botsTurn) game = game.play(bestMove(game));
+  }
 
   void _setMode(TicTacToeMode m) => setState(() {
     mode = m;
-    game = TicTacToe.initial();
+    _newGameImpl();
+    xWinCount = oWinCount = drawCount = 0;
+  });
+
+  void _setMe(Mark m) => setState(() {
+    me = m;
+    _newGameImpl();
     xWinCount = oWinCount = drawCount = 0;
   });
 
   String get status {
     final w = game.winner;
     if (mode == .computer) {
-      if (w == .x) return 'You win?! (that should be impossible)';
-      if (w == .o) return 'The computer wins';
+      if (w == me) return 'You win?! (that should be impossible)';
+      if (w == me.other) return 'The computer wins';
       if (game.isDraw) return 'Draw — the best you can do';
-      return botsTurn ? 'Computer is thinking…' : 'Your turn (X)';
+      return botsTurn ? 'Computer is thinking…' : 'Your turn (${me.symbol})';
     }
 
     if (w != null) return 'Player ${w.symbol} wins!';
@@ -76,8 +88,8 @@ class _TicTacToePageState extends State<TicTacToePage> {
     final colorScheme = Theme.of(context).colorScheme;
     final line = game.winningLine ?? const [];
 
-    final xName = mode == .computer ? 'You' : Mark.x.symbol;
-    final oName = mode == .computer ? 'Computer' : Mark.o.symbol;
+    final xName = mode == .computer && me == .x ? 'You' : Mark.x.symbol;
+    final oName = mode == .computer && me == .x ? 'Computer' : Mark.o.symbol;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Tic-Tac-Toe')),
@@ -96,6 +108,17 @@ class _TicTacToePageState extends State<TicTacToePage> {
             selected: {mode},
             onSelectionChanged: (selections) => _setMode(selections.first),
           ),
+          if (mode == .computer) ...[
+            const SizedBox(height: 8),
+            SegmentedButton<Mark>(
+              segments: [
+                for (final m in Mark.values)
+                  ButtonSegment(value: m, label: Text(m.symbol)),
+              ],
+              selected: {me},
+              onSelectionChanged: (selections) => _setMe(selections.first),
+            ),
+          ],
           const SizedBox(height: 16),
           Text(
             '$xName $xWinCount  ·  Draws $drawCount  ·  $oName $oWinCount',
