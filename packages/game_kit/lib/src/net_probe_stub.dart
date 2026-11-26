@@ -1,0 +1,1 @@
+Future<bool> canReachInternet() async => true;
